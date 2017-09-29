@@ -207,10 +207,16 @@ func buildMarkdown(path string, w io.Writer, vars Vars) error {
 	if err != nil {
 		return err
 	}
+
+	if v["draft"] == "true" {
+		return nil
+	}
+
 	content, err := render(body, v)
 	if err != nil {
 		return err
 	}
+
 	v["content"] = string(markdown([]byte(content)))
 	if w == nil {
 		out, err := os.Create(filepath.Join(PUBDIR, renameExt(path, "", ".html")))
