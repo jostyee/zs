@@ -23,6 +23,9 @@ const (
 	ZSDIR  = ".zs"
 	PUBDIR = ".pub"
 
+	delimOpen  = "{{"
+	delimClose = "}}"
+
 	commonHtmlFlags = 0 |
 		blackfriday.HTML_USE_XHTML |
 		blackfriday.HTML_USE_SMARTYPANTS |
@@ -55,9 +58,8 @@ func renameExt(path, oldext, newext string) string {
 	}
 	if oldext == "" || strings.HasSuffix(path, oldext) {
 		return strings.TrimSuffix(path, oldext) + newext
-	} else {
-		return path
 	}
+	return path
 }
 
 // globals returns list of global OS environment variables that start
@@ -226,11 +228,12 @@ func buildMarkdown(path string, w io.Writer, vars Vars) error {
 		defer out.Close()
 		w = out
 	}
+
 	if strings.HasSuffix(v["layout"], ".amber") {
 		return buildAmber(filepath.Join(ZSDIR, v["layout"]), w, v)
-	} else {
-		return buildHTML(filepath.Join(ZSDIR, v["layout"]), w, v)
 	}
+
+	return buildHTML(filepath.Join(ZSDIR, v["layout"]), w, v)
 }
 
 func markdown(input []byte) []byte {
@@ -376,8 +379,11 @@ func buildAll(watch bool) {
 			}
 
 			if info.IsDir() {
+				if info.Name() == "static" {
+					return CopyDir(path, PUBDIR)
+				}
+
 				os.Mkdir(filepath.Join(PUBDIR, path), 0755)
-				return nil
 			} else if info.ModTime().After(lastModified) {
 				if !modified {
 					// First file in this build cycle is about to be modified
@@ -387,6 +393,7 @@ func buildAll(watch bool) {
 				log.Println("build:", path)
 				return build(path, nil, vars)
 			}
+
 			return nil
 		})
 		if modified {
@@ -400,6 +407,66 @@ func buildAll(watch bool) {
 		lastModified = time.Now()
 		time.Sleep(1 * time.Second)
 	}
+}
+
+func CopyFile(source string, dest string) error {
+	sourcefile, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer sourcefile.Close()
+
+	destfile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer destfile.Close()
+
+	_, err = io.Copy(destfile, sourcefile)
+	if err == nil {
+		sourceinfo, err := os.Stat(source)
+		if err != nil {
+			err = os.Chmod(dest, sourceinfo.Mode())
+		}
+	}
+
+	return err
+}
+
+func CopyDir(source string, dest string) error {
+	// get properties of source dir
+	sourceinfo, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+
+	// create dest dir
+	err = os.MkdirAll(dest, sourceinfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	directory, _ := os.Open(source)
+	objects, err := directory.Readdir(-1)
+	for _, obj := range objects {
+		sourcefilepointer := source + "/" + obj.Name()
+		destinationfilepointer := dest + "/" + obj.Name()
+
+		if obj.IsDir() {
+			// create sub-directories - recursively
+			err = CopyDir(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				return err
+			}
+		} else {
+			// perform copy
+			err = CopyFile(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func init() {
