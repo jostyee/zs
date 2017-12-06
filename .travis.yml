@@ -5,7 +5,6 @@ go:
  - 1.8
  - 1.9.x
  - master
- - tip
 
 before_install:
   - pip install --user codecov
