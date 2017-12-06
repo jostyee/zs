@@ -10,14 +10,8 @@
 [[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
-  revision = "cadec560ec52d93835bf2f15bd794700d3a2473b"
-  version = "v2.0.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/shurcooL/sanitized_anchor_name"
-  packages = ["."]
-  revision = "86672fcb3f950f35f2e675df2240550f2a50762f"
+  revision = "4048872b16cc0fc2c5fd9eacf0ed2c2fedaa0c8c"
+  version = "v1.5"
 
 [[projects]]
   name = "github.com/yosssi/gcss"
@@ -34,6 +28,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "afa37e0ed9a28b21f02046b1a065d4e2fe91d237b6da4d6d8dd4d219b5fa37c1"
+  inputs-digest = "47fd394f18d24f67edd48828b59281d0373e8c23172ba54d83dc67d48c2d95a8"
   solver-name = "gps-cdcl"
   solver-version = 1
